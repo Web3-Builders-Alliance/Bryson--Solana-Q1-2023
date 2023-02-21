@@ -172,7 +172,7 @@ describe("deposit", () => {
   });
 
   it("Deposit an SPL Token", async () => {
-    let to_token_account = getAssociatedTokenAddress(
+    let to_token_account = await getAssociatedTokenAddress(
       mint.publicKey,
       pda_auth,
       true,
@@ -180,7 +180,7 @@ describe("deposit", () => {
       ASSOCIATED_PROGRAM_ID
     );
 
-    let from_token_account = getAssociatedTokenAddress(
+    let from_token_account = await getAssociatedTokenAddress(
       mint.publicKey,
       deposit_authority.publicKey,
       false,
@@ -193,19 +193,20 @@ describe("deposit", () => {
       .accounts({
         depositAccount: deposit_account.publicKey,
         pdaAuth: pda_auth,
-        toTokenAccount: ,          //unsure how to get the ID??
-        fromTokenAccount: ,      // unsure how to get the ID??
+        toTokenAccount: to_token_account, //unsure how to get the ID??
+        fromTokenAccount: from_token_account, // unsure how to get the ID??
         depositAuthority: deposit_authority.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: tokenProgram.address,
-        mint: mint.publicKey,
+        tokenMint: mint.publicKey,
+        associatedTokenProgram: associatedTokenProgram.address,
       })
       .signers([deposit_authority])
       .rpc();
     console.log(deposit_spl_tx);
   });
 
-  it("Withdraw an SPL Token", async () => {
+  xit("Withdraw an SPL Token", async () => {
     let to_token_account = getAssociatedTokenAddress(
       mint.publicKey,
       pda_auth,

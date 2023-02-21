@@ -3,7 +3,7 @@ use anchor_lang::{
     system_program::{self}
 };
 
-use anchor_spl::token::{ Transfer as SplTransfer, TokenAccount, Mint, Token};
+use anchor_spl::{token::{ Transfer as SplTransfer, TokenAccount, Mint, Token}, associated_token::AssociatedToken};
 use solana_program::native_token::Sol;
 
 
@@ -90,14 +90,14 @@ pub mod deposit_program {
 
     pub fn withdraw_spl(ctx: Context<WithdrawSPL>, amount: u64) -> Result<()> {
         let deposit_account = &mut ctx.accounts.deposit_account;
-        let deposit_auth = &ctx.accounts.deposit_auth;
+        let deposit_authority = &&ctx.accounts.deposit_authority;
         let from_token_account = &mut ctx.accounts.from_token_account;
        
     
         let cpi_accounts = SplTransfer {
             from: from_token_account.to_account_info(),
             to: deposit_account.to_account_info(),
-            authority: deposit_auth.to_account_info() 
+            authority: deposit_authority.to_account_info() 
         };
 
         let seeds = &[
@@ -166,18 +166,26 @@ pub struct Withdraw <'info> {
 
 #[derive(Accounts)]
 pub struct DepositSPL<'info> {
- #[account(mut, has_one = deposit_authority)]
+    #[account(has_one = deposit_authority)]
     pub deposit_account: Account<'info, SolAccount>,
- #[account(seeds = [b"auth", deposit_account.key().as_ref()], bump = deposit_account.auth_bump)]
+    #[account(seeds = [b"auth", deposit_account.key().as_ref()], bump = deposit_account.auth_bump)]
     /// CHECK: no need to check this.
     pub pda_auth: UncheckedAccount<'info>,
-    pub to_token_account: Account<'info, TokenAccount>,
-    pub from_token_account: Account<'info, TokenAccount>,
- #[account(mut)]
+    #[account(mut)]
     pub deposit_authority: Signer<'info>,
-    pub system_program: Program<'info, System>,
+    #[account(
+        init_if_needed,
+        associated_token::mint = token_mint,
+        payer = deposit_authority,
+        associated_token::authority = pda_auth,
+    )]
+    pub to_token_account: Account<'info, TokenAccount>,
+    #[account(mut)]
+    pub from_token_account: Account<'info, TokenAccount>,
+    pub token_mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
-    pub mint: Account<'info, Mint>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub system_program: Program<'info, System>,
 }
 
 
@@ -188,9 +196,18 @@ pub struct WithdrawSPL<'info> {
     #[account(seeds = [b"auth", deposit_account.key().as_ref()], bump )]
     /// CHECK: no need to check this.
     pub pda_auth: UncheckedAccount<'info>,
+    #[account(
+        init_if_needed,
+        associated_token::mint = token_mint,
+        payer = deposit_authority,
+        associated_token::authority = pda_auth,
+    )]
+    pub to_token_account: Account<'info, TokenAccount>,
+    pub token_mint: Account<'info, Mint>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub from_token_account: Account<'info, TokenAccount>,
     #[account(mut)]
-    pub deposit_auth: Signer<'info>,
+    pub deposit_authority: Signer<'info>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
 }
