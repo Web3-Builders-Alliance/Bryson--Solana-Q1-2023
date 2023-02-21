@@ -78,12 +78,6 @@ pub struct MetaTicketRentEscrowAccount {
 }
 
 
-
-
-
-
-
-
 const DISCRIMINATOR_LENGTH: usize = 8;
 const BOOL_LENGTH: usize = 1;
 const PUBLIC_KEY_LENGTH: usize = 32;
@@ -95,7 +89,7 @@ impl MetaTicketRentEscrowAccount {
     BOOL_LENGTH +
     PUBLIC_KEY_LENGTH +
     U64_LENGTH;
-}
+};
 
 
 impl<'info> From<&mut InitializeRentEscrow<'info>> for CpiContext<'_, '_, '_, 'info, SetAuthority<'info>> {
