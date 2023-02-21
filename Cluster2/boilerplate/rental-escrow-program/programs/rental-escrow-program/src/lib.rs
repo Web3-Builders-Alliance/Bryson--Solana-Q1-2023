@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
-use anchor_spl::token::{self, CloseAccount, SetAuthority, TokenAccount, Transfer};
+use anchor_spl::token::{self, CloseAccount, SetAuthority, TokenAccount, Transfer, Token};
 
 
 // replace this Program ID once deployed.
@@ -11,17 +11,17 @@ pub mod boilerplate_v1 {
     use super::*;
 
     //initialize some account
-    pub fn initialize(ctx: Context<InitializeRentEscrow>, initializer_metaticket_nft_amount_usdc: u64, renters_metaticket_nft_amount: u64 ) -> Result<()> {
+    pub fn initialize_rent_escrow(ctx: Context<InitializeRentEscrow>, initializer_metaticket_nft_amount_usdc: u64, renters_metaticket_nft_amount: u64 ) -> Result<()> {
         
         Ok(())
     }
 
-    pub fn exchange(ctx: Context<Exchange> ) -> Result<()> {
+    pub fn exchange_usdc_for_nft(ctx: Context<Exchange> ) -> Result<()> {
         
         Ok(())
     }
 
-    pub fn cancel(ctx: Context<CancelRentEscrow> ) -> Result<()> {
+    pub fn cancel_rent_escrow(ctx: Context<CancelRentEscrow> ) -> Result<()> {
         
         Ok(())
     }
@@ -31,6 +31,11 @@ pub mod boilerplate_v1 {
 #[derive(Accounts)]
 pub struct InitializeRentEscrow<'info, > {
    pub initializer: Signer<'info>,
+   pub temp_usdc_account: Account<'info, TokenAccount>,
+   pub nft_to_receive_account: Account<'info, TokenAccount>,
+   pub escrow_account: Account<'info, MetaTicketRentEscrowAccount>,
+   pub token_program: Program<'info, Token>,
+   pub system_program: Program<'info, System>
 }
 
 //initiates the echange ... USDC for Sub-Minted NFT MetaTicket
@@ -89,7 +94,7 @@ impl MetaTicketRentEscrowAccount {
     BOOL_LENGTH +
     PUBLIC_KEY_LENGTH +
     U64_LENGTH;
-};
+}
 
 
 impl<'info> From<&mut InitializeRentEscrow<'info>> for CpiContext<'_, '_, '_, 'info, SetAuthority<'info>> {
